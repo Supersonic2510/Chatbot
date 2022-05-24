@@ -1,63 +1,110 @@
 import json
 import re
 import random_responses
+import spacy
+import nltk
+from nltk.corpus import stopwords
+from nltk.corpus import wordnet
+
+nlp = spacy.load("en_core_web_lg")
 
 
 # Load JSON data
-def load_json(file):
-    with open(file) as bot_responses:
+def loadJson(file):
+    with open(file) as botResponses:
         print(f"Loaded '{file}' successfully!")
-        return json.load(bot_responses)
-
+        return json.load(botResponses)
 
 # Store JSON data
-response_data = load_json("basic_response.json")
+responseData = loadJson("basic_response.json")
+carQuestions = loadJson("car_questions.json")
 
 
-def get_response(input_string):
-    split_message = re.split(r'\s+|[,;?!.-]\s*', input_string.lower())
-    score_list = []
+def getResponse(inputString):
+    messageUnfiltered = nltk.word_tokenize(inputString.lower())
+    # stopWords = set(stopwords.words("english"))
+    filteredMessageArray = []
 
-    # Check all the responses in api 
-    for response in response_data:
-        response_score = 0
-        required_score = 0
-        required_words = response["required_words"]
+    # Algorithm to get the most relevant information
+    for word in messageUnfiltered:
+        if word.isalnum():
+            filteredMessageArray.append(word)
 
-        # Check if there are any required words
-        if required_words:
-            for word in split_message:
-                if word in required_words:
-                    required_score += 1
+    inputFiltered = " ".join(filteredMessageArray)
+    input = nlp(inputFiltered)
+    scoreList = []
 
-        # Amount of required words should match the required score
-        if required_score == len(required_words):
-            # Check each word the user has typed
-            for word in split_message:
-                # If the word is in the response, add to the score
-                if word in response["user_input"]:
-                    response_score += 1
+    for i in range(len(responseData)):
+        response = responseData[i]
+        tempScore = []
+        for j in range(len(response["user_input"])):
+            tempScore.insert(j, nlp(response["user_input"][j]).similarity(input))
+        scoreList.insert(i, max(tempScore))
 
-        # Add score to list
-        score_list.append(response_score)
-        # Debugging: Find the best phrase
-        # print(response_score, response["user_input"])
+    print(scoreList)
+    bestResponse = max(scoreList)
+    responseIndex = scoreList.index(bestResponse)
 
-    # Find the best response and return it if they're not all 0
-    best_response = max(score_list)
-    response_index = score_list.index(best_response)
+    # score_list = []
+    #
+    # # Check all the responses in api
+    # for response in response_data:
+    #     response_score = 0
+    #     required_score = 0
+    #     required_words = response["required_words"]
+    #
+    #     # Check if there are any required words
+    #     if required_words:
+    #         for word in filteredMessage:
+    #             if word in required_words:
+    #                 required_score += 1
+    #
+    #     # Amount of required words should match the required score
+    #     if required_score == len(required_words):
+    #         # Check each word the user has typed
+    #         for word in filteredMessage:
+    #             # If the word is in the response, add to the score
+    #             if word in response["user_input"]:
+    #                 response_score += 1
+    #
+    #     # Add score to list
+    #     score_list.append(response_score)
+    #     # Debugging: Find the best phrase
+    #     # print(response_score, response["user_input"])
+    #
+    # # Find the best response and return it if they're not all 0
+    # best_response = max(score_list)
+    # response_index = score_list.index(best_response)
 
     # Check if input is empty
-    if input_string == "":
-        return "Please type something so we can chat :("
+    if inputFiltered == "":
+        return -2
 
-    # If there is no good response, return a random one.
-    if best_response != 0:
-        return response_data[response_index]["bot_response"]
+    if bestResponse > 0.80:
+        return responseIndex
 
-    return random_responses.random_string()
+    return -1
 
 
-while True:
-    user_input = input("You: ")
-    print("MyCar:", get_response(user_input))
+responseIndex = 0
+
+while responseIndex != 1:
+    userInput = input("You: ")
+
+    responseIndex = getResponse(userInput)
+    responseString = ""
+
+    if responseIndex < -1:
+        responseString = "Please type something so we can chat :("
+    elif responseIndex == -1:
+        responseString = random_responses.random_string()
+    elif responseIndex >= 0:
+        responseString = responseData[responseIndex]["bot_response"]
+
+    print("MyCar:", responseString)
+
+    # # If the index is 3 then start asking car questions
+    # if responseIndex == 3:
+    #     #Create a car object
+    #
+    #     for questions in car_questions:

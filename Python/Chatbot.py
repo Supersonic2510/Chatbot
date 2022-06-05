@@ -1,31 +1,20 @@
-import cgi
 import json
-import sys
+import os
 import threading
+import time
 import urllib.request
-from socketserver import ThreadingMixIn
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from text_to_num import text2num
-import xmltodict as xmltodict
-from negspacy.negation import Negex
-
-import random_responses
-import spacy
+import mysql.connector
 import nltk
 import requests
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from spacy.matcher import PhraseMatcher
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import os
-import logging
-from threading import *
-import asyncio
-import time
-import shutil
-import mysql.connector
+import spacy
+import xmltodict as xmltodict
 from mysql.connector import Error
-import pandas
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from text_to_num import text2num
 
+import random_responses
 from Python.Car import Car
 
 newInput = ""

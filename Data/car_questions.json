@@ -1,0 +1,98 @@
+[
+  {
+    "category": "car size",
+    "bot_input": "Are you sensitive to the size of your car? If so, please indicate which you prefer",
+    "user_input": [
+      ["no, i don't like ", "no i don't", "doesn't matter", "i don't care"],
+      ["i like big car", "i'm into huge cars", "large cars are the ones", "i like large ones", "large ones", "large", "big"],
+      ["i like medium size car", "medium ones", "i like medium ones", "medium"],
+      ["i like small size car", "i like small cars", "i like small ones", "small ones", "small", "i like compact cars", "compact ones", "i like compact ones", "compact"]
+    ]
+  },
+  {
+    "category": "brand",
+    "bot_input": "Do you have a specific brand you are into",
+    "user_input": [
+      ["no brand", "no i don't", "doesn't matter", "i don't care"],
+      ["acura"],
+      ["alfa romeo", "alfa"],
+      ["aston martin", "aston"],
+      ["audi"],
+      ["bmw"],
+      ["bentley"],
+      ["bugatti"],
+      ["buick"],
+      ["cadillac"],
+      ["chevrolet"],
+      ["chrysler"],
+      ["dodge"],
+      ["fiat"],
+      ["ferrari"],
+      ["ford"],
+      ["gmc"],
+      ["genesis"],
+      ["hummer"],
+      ["honda"],
+      ["hyundai"],
+      ["infiniti"],
+      ["kia"],
+      ["lamborghini"],
+      ["land rover"],
+      ["lexus"],
+      ["lincoln"],
+      ["lotus"],
+      ["maserati"],
+      ["maybach"],
+      ["mazda"],
+      ["mclaren"],
+      ["mercedes-benz", "mercedes"],
+      ["mitsubishi"],
+      ["nissan"],
+      ["oldsmobile"],
+      ["plymouth"],
+      ["pontiac"],
+      ["porsche"],
+      ["rolls-royce", "rolls"],
+      ["saab"],
+      ["scion"],
+      ["spyker"],
+      ["subaru"],
+      ["suzuki"],
+      ["tesla"],
+      ["toyota"],
+      ["volkswagen"],
+      ["volvo"]
+    ]
+  },
+  {
+    "category": "doors",
+    "bot_input": "Do you have a family?",
+    "user_input": [
+      [""],
+      ["no", "i don't have a family"],
+      ["yes", "i have a family"]
+    ]
+  },
+  {
+    "category": "extraurban",
+    "bot_input": "Do you like travelling long distances by car?",
+    "user_input": [
+      [""],
+      ["no", "i don't travel long distances", "i drive in city", "i drive in town"],
+      ["sometimes", "some days"],
+      ["for sure", "often", "many days", "yes", "yeah"],
+      ["always", "love it"]
+    ]
+  },
+  {
+    "category": "urban",
+    "bot_input": "Do you use frequently the car to commute?",
+    "user_input": [
+      [""],
+      ["no", "i don't use it in the city", "not at all"],
+      ["sometimes", "some days"],
+      ["for sure", "often", "many days", "yes", "yeah"],
+      ["i drive in city", "i drive in town", "always"]
+    ]
+  }
+]

@@ -1,0 +1,88 @@
+[
+  {
+    "category": "car size",
+    "sql_data": [
+      "no",
+      "Large",
+      "Midsize",
+      "Compact"
+    ]
+  },
+  {
+    "category": "brand",
+    "sql_data": [
+      "no brand",
+      "Acura",
+      "Alfa Romeo",
+      "Aston Martin",
+      "Audi",
+      "Bmw",
+      "Bentley",
+      "Bugatti",
+      "Buick",
+      "Cadillac",
+      "Chevrolet",
+      "Chrysler",
+      "Dodge",
+      "FIAT",
+      "Ferrari",
+      "Ford",
+      "GMC",
+      "Genesis",
+      "HUMMER",
+      "Honda",
+      "Hyundai",
+      "Infiniti",
+      "Kia",
+      "Lamborghini",
+      "Land Rover",
+      "Lexus",
+      "Lincoln",
+      "Lotus",
+      "Maserati",
+      "Maybach",
+      "Mazda",
+      "Mclaren",
+      "Mercedes-Benz",
+      "Mitsubishi",
+      "Nissan",
+      "Oldsmobile",
+      "Plymouth",
+      "Pontiac",
+      "Porsche",
+      "Rolls-Royce",
+      "Saab",
+      "Scion",
+      "Spyker",
+      "Subaru",
+      "Suzuki",
+      "Tesla",
+      "Toyota",
+      "Volkswagen",
+      "Volvo"
+    ]
+  },
+  {
+    "category": "door",
+    "sql_data": [
+    ]
+  },
+  {
+    "category": "extraurban",
+    "sql_data": [
+      12,
+      18,
+      24,
+      32
+    ]
+  },
+  {
+    "category": "urban",
+    "sql_data": [
+      7,
+      15,
+      22,
+      30
+    ]
+  }
+]

@@ -105,7 +105,7 @@ def getResponse(inputString):
     # Check if input is empty
     if inputFiltered == "":
         return -2
-
+    # we want a minimum of 80% similarity
     if bestResponse > 0.80:
         return responseIndex
 

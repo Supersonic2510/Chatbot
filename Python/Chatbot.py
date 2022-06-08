@@ -31,7 +31,6 @@ threadList = []
 threadListId = []
 
 nlp = spacy.load("en_core_web_lg")
-nlp.add_pipe("negex")
 url = "http://localhost:3000"
 
 # Load JSON data
@@ -148,6 +147,7 @@ def threaded_Chatbot(id, localChatSem, serverSem):
     global responseString
     global t1
     responseIndex = 0
+    car = Car(optionSearch)
 
     serverSem.release()
 
@@ -170,10 +170,11 @@ def threaded_Chatbot(id, localChatSem, serverSem):
         elif responseIndex >= 0:
             responseString = responseData[responseIndex]["bot_response"]
 
-        print("MyCar:", responseString)
-        requests.post(nodejsUrl, json={'messagePython': responseString, "idPython": id})
+        if responseIndex < 6:
+            print("MyCar:", responseString)
+            requests.post(nodejsUrl, json={'messagePython': responseString, "idPython": id})
 
-        # TODO: Fix waky solution
+        # Set a certain delay to emulate a human talking
         time.sleep(0.5)
 
         # If the index is 3 then start asking car questions
@@ -281,7 +282,7 @@ def threaded_Chatbot(id, localChatSem, serverSem):
             requests.post(nodejsUrl, json={'messagePython': "Perfect, we have here your recommendation!", "idPython": id})
 
 
-            sqlQuery = "select car.brand, car.model, car.year from car where car.year >= 2010"
+            sqlQuery = "select car.brand, car.model, car.year, car.engine, car.cylinders, car.transmissionType, car.drivenWheels, car.doors, car.size, car.style, car.MSRP from car where car.year >= 2010"
 
             if not car.isEmpty():
                 for size in car.size:
@@ -314,6 +315,14 @@ def threaded_Chatbot(id, localChatSem, serverSem):
 
             if bool(myresult):
                 carName = myresult[0] + " " + myresult[1] + " " + str(myresult[2])
+                enginePower = myresult[3]
+                engineCylinders = myresult[4]
+                transmission = myresult[5]
+                drivenWheel = myresult[6]
+                doors = myresult[7]
+                carSize = myresult[8]
+                carStyle = myresult[9]
+                price = myresult[10]
 
                 # Finish with the result (image API call)
                 carUrl = "http://www.carimagery.com/api.asmx/GetImageUrl"
@@ -332,15 +341,27 @@ def threaded_Chatbot(id, localChatSem, serverSem):
                 requests.post(nodejsUrl, json={"messageImageFile": filename,
                                                "messageImageName": file,
                                                "messageImageCaption":
-                                                   ("Check this out! What do you think about it? *" + carName + "*"),
+                                                   ("Check this out! What do you think about it? *" + carName + "*\n\n"
+                                                    + "·Engine Power:" + str(enginePower)
+                                                    + "\n·Cylinders:" + str(engineCylinders)
+                                                    + "\n·Transmission:" + transmission
+                                                    + "\n·Driven Wheel:" + drivenWheel
+                                                    + "\n·Doors:" + str(doors)
+                                                    + "\n·Size:" + carSize
+                                                    + "\n·Style:" + carStyle
+                                                    + "\n·MSRP:" + str(price)),
                                                "idPython": id})
 
                 # Removing the image after usage
                 os.remove(filename)
 
+                # create a new object again
+                car = Car(optionSearch)
+
             else:
                 time.sleep(0.5)
                 requests.post(nodejsUrl, json={'messagePython': "Sorry, we could not find a car specific to your preferences :(", "idPython": id})
+
 
 
 

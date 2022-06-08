@@ -11,7 +11,7 @@ var user;
 var session = venom
   .create({
     session: 'session-name', //name of session
-    multidevice: false // for version not multidevice use false.(default: true)
+    multidevice: false
   });
 
 session.then((client) => start(client))
@@ -121,6 +121,7 @@ function send(client, id) {
 }
 
 function sendImage(client, id) {
+    // Bug current Whatsapp API version (instead of sending image, we send text only)
     client
         .sendImage(id, userResponse.messageImageFile, userResponse.messageImageName, userResponse.messageImageCaption)
         .then((result) => {
@@ -129,4 +130,13 @@ function sendImage(client, id) {
         .catch((erro) => {
           console.error('Error when sending: ', erro); //return object error
         });
+
+    // client
+    //     .sendText(id, userResponse.messageImageFile)
+    //         .then((result) => {
+    //           //console.log('Result: ', result); //return object success
+    //         })
+    //         .catch((erro) => {
+    //           console.error('Error when sending: ', erro); //return object error
+    //         });
 }

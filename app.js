@@ -8,6 +8,7 @@ var userResponse;
 var userRequest;
 var user;
 
+// create instance of whatsapp web
 var session = venom
   .create({
     session: 'session-name', //name of session
@@ -19,6 +20,7 @@ session.then((client) => start(client))
     console.log(erro);
   });
 
+// send via POST the message from the user to chatbot.
 function start(client) {
   client.onMessage((message) => {
     if (message.isGroupMsg === false) {
@@ -35,38 +37,17 @@ function start(client) {
             method: "POST"
             }, function (error, response, body){
         });
-        // return new Promise  (resolve => {
-        //     request({
-        //           headers: {'content-type' : 'application/json'},
-        //           url:     'http://localhost:3030',
-        //           body: {
-        //               "messagePost": message.body
-        //           },
-        //           json: true,
-        //           method: "POST",
-        //         }, function(error, response, body){
-        //           if(!error)
-        //             resolve(body);
-        //         });
-        // }).then(value => {
-        //     client
-        //         .sendText(message.from, value)
-        //         .then((result) => {
-        //           //console.log('Result: ', result); //return object success
-        //         })
-        //         .catch((erro) => {
-        //           console.error('Error when sending: ', erro); //return object error
-        //         });
-        // });
     }
   });
 }
 
-var app = require("express")();
-   var http = require('http').Server(app);
-   var bodyParser = require('body-parser');
+    var app = require("express")();
+    var http = require('http').Server(app);
+    var bodyParser = require('body-parser');
 
+    // send text answer or image
     app.use(bodyParser.json())
+    // get answer from chatbot and sends it to whatsapp with functions send() or sendImage()
     app.post('/',function(req,res){
         if (req.body.messagePython !== undefined) {
             console.log("MessagePython Value: ");
@@ -89,6 +70,7 @@ var app = require("express")();
         }
     });
 
+
     app.get('/',function(req,res){
         res.body = userResponse
         console.log("User response: ", userResponse);
@@ -99,15 +81,6 @@ var app = require("express")();
         console.log('listening...');
     });
 
-// function receive(client) {
-//   client.onMessage((message) => {
-//       // console.log(message)
-//     if (message.isGroupMsg === false) {
-//         //Get message
-//         userRequest = message.body;
-//     }
-//   });
-// }
 
 function send(client, id) {
     client
@@ -130,13 +103,4 @@ function sendImage(client, id) {
         .catch((erro) => {
           console.error('Error when sending: ', erro); //return object error
         });
-
-    // client
-    //     .sendText(id, userResponse.messageImageFile)
-    //         .then((result) => {
-    //           //console.log('Result: ', result); //return object success
-    //         })
-    //         .catch((erro) => {
-    //           console.error('Error when sending: ', erro); //return object error
-    //         });
 }

@@ -24,6 +24,7 @@ global finishedSentence
 global newInputFromUser
 global sqlConnection
 
+# semaphores to do syncronism between messages
 chatSentenceSem = []
 serverSem = []
 inputSem = threading.Semaphore(value=1)
@@ -32,6 +33,7 @@ threadListId = []
 
 nlp = spacy.load("en_core_web_lg")
 url = "http://localhost:3000"
+
 
 # Load JSON data
 def loadJson(file):
@@ -45,18 +47,21 @@ responseData = loadJson("./Data/basic_response.json")
 carQuestions = loadJson("./Data/car_questions.json")
 optionSearch = loadJson("./Data/option_search.json")
 
+
 def sentimentAnalyse(inputText):
     score = SentimentIntensityAnalyzer().polarity_scores(inputText)
     print(score)
 
+
+# connect to sql database
 def create_server_connection(host_name, user_name, user_password, mydatabase):
     connection = None
     try:
         connection = mysql.connector.connect(
-            host = host_name,
-            user = user_name,
-            passwd = user_password,
-            database = mydatabase
+            host=host_name,
+            user=user_name,
+            passwd=user_password,
+            database=mydatabase
         )
         print("MySQL Database connection successful")
     except Error as err:
@@ -65,6 +70,7 @@ def create_server_connection(host_name, user_name, user_password, mydatabase):
     return connection
 
 
+# handle response from user
 def getResponse(inputString):
     messageUnfiltered = nltk.word_tokenize(inputString.lower())
     # stopWords = set(stopwords.words("english"))
@@ -82,10 +88,11 @@ def getResponse(inputString):
     # sentimentAnalyse(inputFiltered)
 
     for tok in input.doc:
-        print(tok.lemma_,tok.dep_)
+        print(tok.lemma_, tok.dep_)
 
     scoreList = []
 
+    # search the best response
     for i in range(len(responseData)):
         response = responseData[i]
         tempScore = []
@@ -105,42 +112,44 @@ def getResponse(inputString):
     return -1
 
 
+# handler from input from user
 class Handler(BaseHTTPRequestHandler):
     global chatSentenceSem
     global responseString
 
     def do_POST(self):
-         global newInputFromUser
-         global newInput
-         contentLength = int(self.headers['Content-Length'])
-         data = json.loads(self.rfile.read(contentLength))
+        global newInputFromUser
+        global newInput
+        contentLength = int(self.headers['Content-Length'])
+        data = json.loads(self.rfile.read(contentLength))
 
-         #TODO: Check if number id not in the list
+        # Check if number id not in the list
 
-         if data["messageID"] not in threadListId:
-             # Create new semaphores
-             thisSentenceSem = threading.Semaphore(value=0)
-             thisServerSem = threading.Semaphore(value=0)
+        if data["messageID"] not in threadListId:
+            # Create new semaphores
+            thisSentenceSem = threading.Semaphore(value=0)
+            thisServerSem = threading.Semaphore(value=0)
 
-             #Append semaphores
-             chatSentenceSem.append(thisSentenceSem)
-             serverSem.append(thisServerSem)
-             thread = threading.Thread(target=threaded_Chatbot,
-                                       args=(data["messageID"], thisSentenceSem, thisServerSem))
-             thread.start()
+            # Append semaphores
+            chatSentenceSem.append(thisSentenceSem)
+            serverSem.append(thisServerSem)
+            thread = threading.Thread(target=threaded_Chatbot,
+                                      args=(data["messageID"], thisSentenceSem, thisServerSem))
+            thread.start()
 
-             threadList.append(thread)
-             threadListId.append(data["messageID"])
+            threadList.append(thread)
+            threadListId.append(data["messageID"])
 
-             # TODO: Wait thread to start
-             serverSem[threadListId.index(data["messageID"])].acquire()
+            # Wait thread to start
+            serverSem[threadListId.index(data["messageID"])].acquire()
 
         # Block new input
-         inputSem.acquire()
-         newInput = data["messagePost"]
-         inputSem.release()
+        inputSem.acquire()
+        newInput = data["messagePost"]
+        inputSem.release()
 
-         chatSentenceSem[threadListId.index(data["messageID"])].release()
+        chatSentenceSem[threadListId.index(data["messageID"])].release()
+
 
 def threaded_Chatbot(id, localChatSem, serverSem):
     global newInput
@@ -151,10 +160,12 @@ def threaded_Chatbot(id, localChatSem, serverSem):
 
     serverSem.release()
 
+    # until user says bye
     while responseIndex != 1:
 
         localChatSem.acquire()
 
+        # semaphore used to protect the variable from other threads
         inputSem.acquire()
         userInput = newInput
         inputSem.release()
@@ -163,11 +174,11 @@ def threaded_Chatbot(id, localChatSem, serverSem):
         responseIndex = getResponse(userInput)
         responseString = ""
 
-        if responseIndex < -1:
+        if responseIndex < -1: # empty string
             responseString = "Please type something so we can chat :("
-        elif responseIndex == -1:
+        elif responseIndex == -1: # did not understand
             responseString = random_responses.random_string()
-        elif responseIndex >= 0:
+        elif responseIndex >= 0: # answer
             responseString = responseData[responseIndex]["bot_response"]
 
         if responseIndex < 6:
@@ -179,25 +190,27 @@ def threaded_Chatbot(id, localChatSem, serverSem):
 
         # If the index is 3 then start asking car questions
         if responseIndex == 3:
-            # TODO: Create car object
+            # Create car object
             car = Car(optionSearch)
             questionIndex = 0
             for questions in carQuestions:
 
-                # TODO: Print question in terminal and post in web
+                # Print question in terminal and post in web
                 print(questions["bot_input"])
                 requests.post(nodejsUrl, json={'messagePython': questions["bot_input"], "idPython": id})
 
                 localChatSem.acquire()
 
-                # TODO: Get the answer
+                # Get the answer
                 inputSem.acquire()
                 userInput = newInput
                 inputSem.release()
 
                 # userInput = input("You: ")
 
-                listSentences = list(nlp(userInput.replace(",",".").replace("and",".").replace("or",".").replace("nor",".")).sents)
+                # separate sentence and handle each of them individually
+                listSentences = list(
+                    nlp(userInput.replace(",", ".").replace("and", ".").replace("or", ".").replace("nor", ".")).sents)
 
                 for sentence in listSentences:
                     scoreList = [[]]
@@ -220,13 +233,14 @@ def threaded_Chatbot(id, localChatSem, serverSem):
 
                     if questionIndex == 2:
                         if bestIndex == 2:
-                            # TODO: calculate auxiliary responses
+                            # calculate auxiliary responses
                             print("My Car:", "How many members are you in the family?")
-                            requests.post(nodejsUrl, json={'messagePython': "How many members are you in the family?", "idPython": id})
+                            requests.post(nodejsUrl, json={'messagePython': "How many members are you in the family?",
+                                                           "idPython": id})
 
                             localChatSem.acquire()
 
-                            # TODO: Get the answer
+                            # Get the answer
                             inputSem.acquire()
                             userInput = newInput
                             inputSem.release()
@@ -244,11 +258,12 @@ def threaded_Chatbot(id, localChatSem, serverSem):
                                         numberPeople.append(text2num(ent.text.lower(), "en"))
 
                             print("My Car:", "Will you use the car with your family?")
-                            requests.post(nodejsUrl, json={'messagePython': "Will you use the car with your family?", "idPython": id})
+                            requests.post(nodejsUrl, json={'messagePython': "Will you use the car with your family?",
+                                                           "idPython": id})
 
                             localChatSem.acquire()
 
-                            # TODO: Get the answer
+                            # Get the answer
                             inputSem.acquire()
                             userInput = newInput
                             inputSem.release()
@@ -266,24 +281,25 @@ def threaded_Chatbot(id, localChatSem, serverSem):
 
                                 tempScoreFamEnd.append(max(tempScoreFam))
 
-
                             if tempScoreFamEnd.index(max(tempScoreFamEnd)) == 1 and max(numberPeople) > 2:
-                                # TODO: Add the value of door numbers to 4
+                                # Add the value of door numbers to 4
                                 car.setCharacteristic(questionIndex, 4)
                     else:
-                        # TODO: if best index > 0.80, process information
+                        # if best index > 0.80, process information
                         if bestIndex > 0 and bestScore > 0.90:
                             car.setCharacteristic(questionIndex, bestIndex)
 
                 questionIndex += 1
 
-            # TODO: Respond the user with suggestion if list belows 10000
+            # Respond the user with suggestion if list belows 10000
             print("My Car:", "Perfect, we have here your recommendation!")
-            requests.post(nodejsUrl, json={'messagePython': "Perfect, we have here your recommendation!", "idPython": id})
+            requests.post(nodejsUrl,
+                          json={'messagePython': "Perfect, we have here your recommendation!", "idPython": id})
 
-
+            # query from database to get a recommendation
             sqlQuery = "select car.brand, car.model, car.year, car.engine, car.cylinders, car.transmissionType, car.drivenWheels, car.doors, car.size, car.style, car.MSRP from car where car.year >= 2010"
 
+            # add info to car skeleton
             if not car.isEmpty():
                 for size in car.size:
                     sqlQuery += " and"
@@ -308,7 +324,7 @@ def threaded_Chatbot(id, localChatSem, serverSem):
             sqlQuery += " order by car.MSRP asc;"
 
             mycursor = sqlConnection.cursor(buffered=True)
-
+            # execute query
             mycursor.execute(sqlQuery)
 
             myresult = mycursor.fetchone()
@@ -360,10 +376,9 @@ def threaded_Chatbot(id, localChatSem, serverSem):
 
             else:
                 time.sleep(0.5)
-                requests.post(nodejsUrl, json={'messagePython': "Sorry, we could not find a car specific to your preferences :(", "idPython": id})
-
-
-
+                requests.post(nodejsUrl,
+                              json={'messagePython': "Sorry, we could not find a car specific to your preferences :(",
+                                    "idPython": id})
 
 
 if __name__ == '__main__':

@@ -27,6 +27,6 @@
     "puppeteer": "^14.3.0",
     "request": "^2.88.2",
     "socket.io": "^4.5.1",
-    "venom-bot": "^4.0.11"
+    "venom-bot": "github:limshengli/venom"
   }
 }
